@@ -2,7 +2,7 @@
 """redis basics"""
 import redis
 import uuid
-from typing import Callable, Optional
+from typing import Callable, Optional, Union
 
 
 class Cache:
@@ -23,21 +23,32 @@ class Cache:
         self._redis.set(f"{key}", data)
         return key
 
-    def get(self, key: str, fn: Optional[Callable]):
+    def get(self, key: str,
+            fn: Optional[Callable] = None) -> Union[str, bytes, int, float]:
         """convert the data back to the desired format"""
         value = self._redis.get(f"{key}")
 
-        if fn and value:
+        if fn:
             return fn(value)
         return value
 
-    def get_str(self, value):
-        """convert value to a string"""
-        return str(value)
+    def get_str(self, key: str) -> str:
+        '''
+            Get a string from the cache.
+        '''
+        value = self._redis.get(key)
+        return value.decode('utf-8')
 
-    def get_int(self, value):
-        """convert value to an integer"""
-        return int(value)
+    def get_int(self, key: str) -> int:
+        '''
+            Get an int from the cache.
+        '''
+        value = self._redis.get(key)
+        try:
+            value = int(value.decode('utf-8'))
+        except Exception:
+            value = 0
+        return value
 
 
 cache = Cache()
